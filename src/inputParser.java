@@ -137,7 +137,39 @@ public class inputParser {
         }
         userInput = in.nextLine();
         riddle.setAnswer(Integer.parseInt(userInput));
-        addXMLNode();
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        Document document = documentBuilder.parse("riddles.xml");
+        Element root = document.getDocumentElement();
+
+        Collection<Riddle> riddles = new ArrayList<Riddle>();
+        riddles.add(riddle);
+        for (int i = 0; i < riddles.size(); i++) {
+            Element newRiddle = document.createElement("riddle");
+
+            Element question = document.createElement("question");
+            question.appendChild(document.createTextNode(riddle.getQuestion()));
+            newRiddle.appendChild(question);
+
+            Element possibleAnswers = document.createElement("possibleAnswers");
+            possibleAnswers.appendChild(document.createTextNode(Arrays.toString(riddle.possibleAnswers.toArray())));
+            newRiddle.appendChild(possibleAnswers);
+
+            Element answerID = document.createElement("answerID");
+            answerID.appendChild(document.createTextNode(Integer.toString(riddle.answerID)));
+            newRiddle.appendChild(answerID);
+
+            root.appendChild(newRiddle);
+
+        }
+
+        DOMSource source = new DOMSource(document);
+
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        StreamResult result = new StreamResult("riddles.xml");
+        transformer.transform(source, result);
+
     }
 
     @Command // Retrieves XML file.
