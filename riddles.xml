@@ -1,0 +1,9 @@
+<riddle>
+  <question>A seven letter word containing thousands of letters.</question>
+  <possibleAnswers>
+    <string>Mailbox</string>
+    <string>eReader</string>
+    <string>Program</string>
+  </possibleAnswers>
+  <answerID>0</answerID>
+</riddle>
