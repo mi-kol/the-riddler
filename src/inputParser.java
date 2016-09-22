@@ -250,5 +250,13 @@ class Riddle {
 
 class Riddles {
     public Collection<Riddle> riddles = new ArrayList<Riddle>();
+
+    public void addRiddle(Riddle riddle) {
+        this.riddles.add(riddle);
+    }
+
+    public void rmRiddle(Riddle riddle) {
+        this.riddles.remove(riddle);
+    }
 }
 
