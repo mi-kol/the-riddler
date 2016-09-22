@@ -12,12 +12,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Scanner;
 
+import com.sun.org.apache.xerces.internal.parsers.DOMParser;
 import com.thoughtworks.xstream.*;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,66 +28,19 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-class AddXMLNode {
-    public static void main(String[] args) throws Exception {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse("riddles.xml");
-        Element root = document.getDocumentElement();
-
-        Collection<Riddle> riddles = new ArrayList<Riddle>();
-        riddles.add(new Riddle());
-
-        for (Riddle riddle : riddles) {
-            Element newRiddle = document.createElement("riddle");
-
-            Element question = document.createElement("question");
-            question.appendChild(document.createTextNode(riddle.getQuestion()));
-            newRiddle.appendChild(question);
-
-            Element possibleAnswers = document.createElement("possibleAnswers");
-            possibleAnswers.appendChild(document.createTextNode(Arrays.toString(riddle.possibleAnswers.toArray())));
-            newRiddle.appendChild(possibleAnswers);
-
-            Element answerID = document.createElement("answerID");
-            answerID.appendChild(document.createTextNode(Integer.toString(riddle.answerID)));
-            newRiddle.appendChild(answerID);
-
-            root.appendChild(newRiddle);
-
-        }
-
-        DOMSource source = new DOMSource(document);
-
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        StreamResult result = new StreamResult("riddles.xml");
-        transformer.transform(source, result);
-    }
-
-    public static class Server {
-        public String getName() {
-            return "foo";
-        }
-        public Integer getPort() {
-            return 12345;
-        }
-    }
-}
-
-
 public class inputParser {
 
     static XStream xstream = new XStream(new DomDriver());
     public String question;
     public String[] answers;
     public static String newFilePath;
+    public static File file;
 
     public static void fileCreator() {
         xstream.alias("riddle", Riddle.class);
         Path currentRelativePath = Paths.get("");
         newFilePath = currentRelativePath.toAbsolutePath().toString() + "\\riddles.xml";
-        File file = new File(newFilePath);
+        file = new File(newFilePath);
         try {
             if (file.createNewFile()) {
                 System.out.println("The XML file has been created!");
@@ -99,6 +54,8 @@ public class inputParser {
 
     public static void main(String[] args) throws IOException {
         fileCreator();
+        xstream.alias("riddles", Riddles.class);
+        xstream.alias("riddle", Riddle.class);
         ShellFactory.createConsoleShell("", "", new inputParser())
                 .commandLoop();
     }
@@ -137,8 +94,47 @@ public class inputParser {
         }
         userInput = in.nextLine();
         riddle.setAnswer(Integer.parseInt(userInput));
-        xstream.toXML(riddle, new FileWriter(newFilePath));
+        if (file.length() == 0) {
+            String s = xstream.toXML(riddle);
+            PrintWriter pw = new PrintWriter("riddles.xml");
+            pw.println(s);
+            pw.flush();
+            pw.close();
+        } else {
+            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            Document document = documentBuilder.parse("riddles.xml");
+            Element root = document.getDocumentElement();
+            Collection<Riddle> riddles = new ArrayList<Riddle>();
+            riddles.add(riddle);
+            for (int i = 0; i < riddles.size(); i++) {
+                Element newRiddle = document.createElement("riddle");
 
+                Element question = document.createElement("question");
+                question.appendChild(document.createTextNode(riddle.getQuestion()));
+                newRiddle.appendChild(question);
+
+                Element possibleAnswers = document.createElement("possibleAnswers");
+                possibleAnswers.appendChild(document.createTextNode(Arrays.toString(riddle.possibleAnswers.toArray())));
+                newRiddle.appendChild(possibleAnswers);
+
+                Element answerID = document.createElement("answerID");
+                answerID.appendChild(document.createTextNode(Integer.toString(riddle.answerID)));
+                newRiddle.appendChild(answerID);
+
+                root.appendChild(newRiddle);
+
+            }
+
+            DOMSource source = new DOMSource(document);
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            StreamResult result = new StreamResult("riddles.xml");
+            transformer.transform(source, result);
+        }
+
+        // xstream.toXML(riddle, new FileWriter(newFilePath));
         // addXMLNode();
     }
 
@@ -146,12 +142,19 @@ public class inputParser {
     public void retrieve() {
         Riddle riddle = new Riddle();
         try {
-            FileInputStream fis = new FileInputStream(newFilePath);
+            FileInputStream fis = new FileInputStream("riddles.xml");
             xstream.fromXML(fis, riddle);
             System.out.println(riddle.stringification());
         } catch (FileNotFoundException ex) {
             ex.printStackTrace();
         }
+    }
+
+    @Command // Wipes XML file.
+    public void wipe() throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter("riddles.xml");
+        writer.print("");
+        writer.close();
     }
 
     public static void addXMLNode () throws Exception {
@@ -245,4 +248,7 @@ class Riddle {
     }
 }
 
+class Riddles {
+    public Collection<Riddle> riddles = new ArrayList<Riddle>();
+}
 

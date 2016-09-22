@@ -1,9 +1,8 @@
 <riddle>
-  <question>A seven letter word containing thousands of letters.</question>
+  <question>Katie Queen of Tennessee</question>
   <possibleAnswers>
-    <string>Mailbox</string>
-    <string>eReader</string>
-    <string>Program</string>
+    <string>The Apache Relay</string>
+    <string>Talking Heads</string>
   </possibleAnswers>
   <answerID>0</answerID>
 </riddle>
