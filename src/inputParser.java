@@ -35,6 +35,7 @@ public class inputParser {
     public String[] answers;
     public static String newFilePath;
     public static File file;
+    Riddles riddles = new Riddles();
 
     public static void fileCreator() {
         xstream.alias("riddle", Riddle.class);
@@ -94,10 +95,11 @@ public class inputParser {
         }
         userInput = in.nextLine();
         riddle.setAnswer(Integer.parseInt(userInput));
+        riddles.addRiddle(riddle);
         if (file.length() == 0) {
-            String s = xstream.toXML(riddle);
+            String toXML = xstream.toXML(riddles);
             PrintWriter pw = new PrintWriter("riddles.xml");
-            pw.println(s);
+            pw.println(toXML);
             pw.flush();
             pw.close();
         } else {
@@ -108,7 +110,10 @@ public class inputParser {
             Collection<Riddle> riddles = new ArrayList<Riddle>();
             riddles.add(riddle);
             for (int i = 0; i < riddles.size(); i++) {
+                Element newRiddles = document.createElement("riddles");
+
                 Element newRiddle = document.createElement("riddle");
+                newRiddles.appendChild(newRiddle);
 
                 Element question = document.createElement("question");
                 question.appendChild(document.createTextNode(riddle.getQuestion()));
@@ -133,18 +138,16 @@ public class inputParser {
             StreamResult result = new StreamResult("riddles.xml");
             transformer.transform(source, result);
         }
-
-        // xstream.toXML(riddle, new FileWriter(newFilePath));
+        xstream.toXML(riddles, new FileWriter(newFilePath));
         // addXMLNode();
     }
 
     @Command // Retrieves XML file.
     public void retrieve() {
-        Riddle riddle = new Riddle();
         try {
             FileInputStream fis = new FileInputStream("riddles.xml");
-            xstream.fromXML(fis, riddle);
-            System.out.println(riddle.stringification());
+            xstream.fromXML(fis, riddles);
+            riddles.stringification();
         } catch (FileNotFoundException ex) {
             ex.printStackTrace();
         }
@@ -249,14 +252,27 @@ class Riddle {
 }
 
 class Riddles {
-    public Collection<Riddle> riddles = new ArrayList<Riddle>();
+    public ArrayList<Riddle> riddles = new ArrayList<Riddle>();
 
     public void addRiddle(Riddle riddle) {
-        this.riddles.add(riddle);
+        riddles.add(riddle);
     }
 
     public void rmRiddle(Riddle riddle) {
-        this.riddles.remove(riddle);
+        riddles.remove(riddle);
+    }
+
+    public ArrayList<Riddle> showRiddles() {
+        return riddles;
+    }
+
+    public void stringification() {
+        for (int i = 0; i < riddles.size(); i++) {
+            System.out.println("Question : " + this.riddles.get(i).getQuestion() +
+                    "\nAnswers : " + this.riddles.get(i).possibleAnswers +
+                    "\nCorrect Answer Index : " + this.riddles.get(i).possibleAnswers + "\n");
+        }
     }
 }
+
 

@@ -1,8 +1,20 @@
-<riddle>
-  <question>Katie Queen of Tennessee</question>
-  <possibleAnswers>
-    <string>The Apache Relay</string>
-    <string>Talking Heads</string>
-  </possibleAnswers>
-  <answerID>0</answerID>
-</riddle>
+<riddles>
+  <riddles>
+    <riddle>
+      <question>best qb</question>
+      <possibleAnswers>
+        <string>trevor siemian</string>
+        <string>brock osweiler</string>
+      </possibleAnswers>
+      <answerID>0</answerID>
+    </riddle>
+    <riddle>
+      <question>best te</question>
+      <possibleAnswers>
+        <string>john phillips</string>
+        <string>antonio gates</string>
+      </possibleAnswers>
+      <answerID>0</answerID>
+    </riddle>
+  </riddles>
+</riddles>
