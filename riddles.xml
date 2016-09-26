@@ -3,18 +3,10 @@
     <riddle>
       <question>best qb</question>
       <possibleAnswers>
-        <string>trevor siemian</string>
-        <string>brock osweiler</string>
+        <string>andy luck</string>
+        <string>andy dalton</string>
       </possibleAnswers>
-      <answerID>0</answerID>
-    </riddle>
-    <riddle>
-      <question>best te</question>
-      <possibleAnswers>
-        <string>john phillips</string>
-        <string>antonio gates</string>
-      </possibleAnswers>
-      <answerID>0</answerID>
+      <answerID>1</answerID>
     </riddle>
   </riddles>
 </riddles>

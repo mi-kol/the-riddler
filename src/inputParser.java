@@ -31,11 +31,11 @@ import javax.xml.transform.stream.StreamResult;
 public class inputParser {
 
     static XStream xstream = new XStream(new DomDriver());
-    public String question;
-    public String[] answers;
     public static String newFilePath;
     public static File file;
-    Riddles riddles = new Riddles();
+    public static Riddles riddles = new Riddles();
+    public int relevantRiddle;
+
 
     public static void fileCreator() {
         xstream.alias("riddle", Riddle.class);
@@ -57,6 +57,15 @@ public class inputParser {
         fileCreator();
         xstream.alias("riddles", Riddles.class);
         xstream.alias("riddle", Riddle.class);
+        try {
+            FileInputStream fis = new FileInputStream("riddles.xml");
+            if (fis.available() > 0) {
+                xstream.fromXML(fis, riddles);
+                riddles.stringification();
+            }
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        }
         ShellFactory.createConsoleShell("", "", new inputParser())
                 .commandLoop();
     }
@@ -72,8 +81,53 @@ public class inputParser {
 
     }
 
+    @Command // Select riddle
+    public void select() {
+        for (int i = 0; i < riddles.riddles.size(); i++) {
+            String newString = "[" + i + "]\n" + riddles.riddles.get(i).stringification();
+            System.out.println(newString);
+        }
+        Scanner in = new Scanner(System.in);
+        System.out.println("Which riddle would you like to select?");
+        String userInput = in.nextLine();
+        relevantRiddle = Integer.parseInt(userInput);
+        System.out.println("Alright.");
+    }
+
+    @Command // Get Question
+    public void question() {
+        System.out.println(riddles.riddles.get(relevantRiddle).getQuestion());
+    }
+
+    @Command // Get Answer
+    public void answer() {
+        System.out.println(riddles.riddles.get(relevantRiddle).getAnswer());
+    }
+
+    @Command // Change Answer
+    public void change() {
+        for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+            System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+        }
+        Scanner in = new Scanner(System.in);
+        System.out.println("What is your new answer? Answer in terms of index.");
+        String userInput = in.nextLine();
+        int userInt = Integer.parseInt(userInput);
+        riddles.riddles.get(relevantRiddle).setAnswer(userInt);
+        System.out.println(userInt + " is now the index. The answer is now " + riddles.riddles.get(relevantRiddle).getAnswer());
+
+    }
+
+
     @Command // Instantiate new Riddle
     public void create() throws Exception {
+        System.out.println("Current riddles.");
+        System.out.println(riddles.riddles.size());
+        if (riddles.riddles.size() > 0) {
+            retrieve();
+        } else {
+            System.out.println("None yet.");
+        }
         Riddle riddle = new Riddle();
         Scanner in = new Scanner(System.in);
         System.out.println("Enter your riddle.");
@@ -85,13 +139,13 @@ public class inputParser {
         int answersInt = Integer.parseInt(userInput);
         for (int i = 0; i < answersInt; i++) {
             in = new Scanner(System.in);
-            System.out.println("[" + (i+1) + "] Possible answer:");
+            System.out.println("[" + i + "] Possible answer:");
             riddle.possibleAnswers.add(in.nextLine());
         }
         in = new Scanner(System.in);
         System.out.println("Which is the correct answer? Type the number, starting from 1.");
         for (int i = 0; i < riddle.possibleAnswers.size(); i++) {
-            System.out.println("[" + (i+1) + "]" + " " + riddle.possibleAnswers.get(i));
+            System.out.println("[" + i + "]" + " " + riddle.possibleAnswers.get(i));
         }
         userInput = in.nextLine();
         riddle.setAnswer(Integer.parseInt(userInput));
@@ -143,7 +197,7 @@ public class inputParser {
     }
 
     @Command // Retrieves XML file.
-    public void retrieve() {
+    public static void retrieve() {
         try {
             FileInputStream fis = new FileInputStream("riddles.xml");
             xstream.fromXML(fis, riddles);
@@ -155,45 +209,12 @@ public class inputParser {
 
     @Command // Wipes XML file.
     public void wipe() throws FileNotFoundException {
+        System.out.println("Current riddles.");
+        retrieve();
         PrintWriter writer = new PrintWriter("riddles.xml");
         writer.print("");
         writer.close();
-    }
-
-    public static void addXMLNode () throws Exception {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse("riddles.xml");
-        Element root = document.getDocumentElement();
-
-        Collection<Riddle> riddles = new ArrayList<Riddle>();
-        riddles.add(new Riddle());
-
-        for (Riddle riddle : riddles) {
-            Element newRiddle = document.createElement("riddle");
-
-            Element question = document.createElement("question");
-            question.appendChild(document.createTextNode(riddle.getQuestion()));
-            newRiddle.appendChild(question);
-
-            Element possibleAnswers = document.createElement("possibleAnswers");
-            possibleAnswers.appendChild(document.createTextNode(Arrays.toString(riddle.possibleAnswers.toArray())));
-            newRiddle.appendChild(possibleAnswers);
-
-            Element answerID = document.createElement("answerID");
-            answerID.appendChild(document.createTextNode(Integer.toString(riddle.answerID)));
-            newRiddle.appendChild(answerID);
-
-            root.appendChild(newRiddle);
-
-        }
-
-        DOMSource source = new DOMSource(document);
-
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        StreamResult result = new StreamResult("riddles.xml");
-        transformer.transform(source, result);
+        System.out.println("Wiped.");
     }
 }
 
@@ -212,12 +233,12 @@ class Riddle {
     }
 
     public String getAnswer() {
-        return this.possibleAnswers.get(this.answerID) + this.answerID;
+        return this.possibleAnswers.get(this.answerID) + " : " + this.answerID;
 
     }
 
-    public void setAnswer(int answerID) {
-        answerID = answerID;
+    public void setAnswer(int inputID) {
+        answerID = inputID;
     }
 
     public void addAnswer(String newAnswer) {
@@ -247,7 +268,7 @@ class Riddle {
     public String stringification() {
         return "Question : " + this.question +
                 "\nAnswers : " + this.possibleAnswers +
-                "\nCorrect Answer Index : " + this.answerID;
+                "\nCorrect Answer + Index: " + getAnswer();
     }
 }
 
@@ -270,7 +291,7 @@ class Riddles {
         for (int i = 0; i < riddles.size(); i++) {
             System.out.println("Question : " + this.riddles.get(i).getQuestion() +
                     "\nAnswers : " + this.riddles.get(i).possibleAnswers +
-                    "\nCorrect Answer Index : " + this.riddles.get(i).possibleAnswers + "\n");
+                    "\nCorrect Answer Index : " + this.riddles.get(i).answerID + "\n");
         }
     }
 }
