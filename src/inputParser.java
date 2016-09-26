@@ -70,14 +70,16 @@ public class inputParser {
                 .commandLoop();
     }
 
-    @Command // Help
+    @Command // Help - Not finished
     public String help() {
         return "Uses: help -- get help\n" +
-                "      create  -- cat a file to prove that you can read files\n" +
-                "      xor <filepath> <cipher> -- XOR text in file with cipher - writes filepath of output to clipboard\n" +
-                "      analyze <filepath> <num buckets> -- give character frequencies for text in file for each bucket\n" +
-                "      Please take note that this program supports Unicode, and does everything in UTF_16BE." +
-                "      Please use full filepaths. This program does not support relative paths.";
+                "      create  -- create a riddle and followp prompts\n" +
+                "      select -- lists all riddles pulled from file. lets you select which one to interact with\n" +
+                "      retrieve -- see all riddles\n" +
+                "      question -- lists question for selected\n " +
+                "     answer -- lists answer for selected\n" +
+                "      wipe -- wipes XML file, probably don't do this\n" +
+                "      solve -- attempt to solve the riddle. either use argument \"easy\" or \"hard\"\n";
 
     }
 
@@ -216,84 +218,170 @@ public class inputParser {
         writer.close();
         System.out.println("Wiped.");
     }
-}
 
-class Riddle {
-    public String question;
-    ArrayList<String> possibleAnswers = new ArrayList<>();
-    public int answerID;
-
-    public void setQuestion(String question) {
-        this.question = question;
-        System.out.println("It worked.");
-    }
-
-    public String getQuestion() {
-        return this.question;
-    }
-
-    public String getAnswer() {
-        return this.possibleAnswers.get(this.answerID) + " : " + this.answerID;
-
-    }
-
-    public void setAnswer(int inputID) {
-        answerID = inputID;
-    }
-
-    public void addAnswer(String newAnswer) {
-        this.possibleAnswers.add(newAnswer);
-    }
-
-    public void rmAnswer(int answerID) {
-        this.possibleAnswers.remove(answerID);
-    }
-
-    public void answerQuestion(int answer) {
-        if (this.answerID == answer) {
-            System.out.println("You are correct!");
+    @Command // Solve
+    public void solve(String mode) {
+        if (riddles.riddles.get(relevantRiddle).isValid()) {
+            if (mode.toLowerCase().equals("hard")) {
+                System.out.println(riddles.riddles.get(relevantRiddle).getQuestion());
+                System.out.println("Answer here! Caps are irrelevant. Be sure to spell correctly!");
+                Scanner in = new Scanner(System.in);
+                String userAnswer = in.nextLine();
+                if (userAnswer.toLowerCase().equals(riddles.riddles.get(relevantRiddle).possibleAnswers.get(riddles.riddles.get(relevantRiddle).answerID).toLowerCase())) {
+                    System.out.println("True!");
+                } else {
+                    System.out.println("False! Try again!");
+                    solve(mode);
+                }
+            } else if (mode.toLowerCase().equals("easy")) {
+                System.out.println(riddles.riddles.get(relevantRiddle).getQuestion());
+                System.out.println("Answer here! Enter the correct index!");
+                for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+                    System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+                }
+                Scanner in = new Scanner(System.in);
+                String userAnswer = in.nextLine();
+                if (Integer.parseInt(userAnswer) == riddles.riddles.get(relevantRiddle).answerID) {
+                    System.out.println("True");
+                } else {
+                    System.out.println("False! Try again!");
+                    solve(mode);
+                }
+            } else {
+                System.out.println("This didn't work. Try typing 'easy' or 'hard' as your argument.");
+            }
         } else {
-            System.out.println("You are incorrect!");
+            System.out.println("The riddle you requested to solve was not valid. Try adding some possible answers.");
         }
     }
 
-    public Boolean isValid() {
-        if (this.possibleAnswers.size() > 0) {
-            return Boolean.TRUE;
-        } else {
-            return Boolean.FALSE;
+    @Command // Edit answers
+    public void edit(String mode) {
+        if (mode.toLowerCase().equals("remove") || mode.toLowerCase().equals("rm")) {
+            System.out.println("Which answer would you like to remove?");
+            for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+                System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+            }
+            Scanner in = new Scanner(System.in);
+            int userAnswer = Integer.parseInt(in.nextLine());
+            riddles.riddles.get(relevantRiddle).rmAnswer(userAnswer);
+            System.out.println("Removed. Here are the remaining answers.");
+            for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+                System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+            }
+            try {
+                refresh();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else if (mode.toLowerCase().equals("add")) {
+            System.out.println("What would you like to add to the answers?");
+            for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+                System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+            }
+            Scanner in = new Scanner(System.in);
+            String userAnswer = in.nextLine();
+            riddles.riddles.get(relevantRiddle).addAnswer(userAnswer);
+            for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+                System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+            }
+            try {
+                refresh();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    public String stringification() {
-        return "Question : " + this.question +
-                "\nAnswers : " + this.possibleAnswers +
-                "\nCorrect Answer + Index: " + getAnswer();
+
+    public void refresh() throws FileNotFoundException {
+        PrintWriter pw = new PrintWriter("riddles.xml");
+        pw.println();
+        String toXML = xstream.toXML(riddles);
+        pw.println(toXML);
+        pw.flush();
+        pw.close();
     }
 }
 
-class Riddles {
-    public ArrayList<Riddle> riddles = new ArrayList<Riddle>();
+    class Riddle {
+        public String question;
+        ArrayList<String> possibleAnswers = new ArrayList<>();
+        public int answerID;
 
-    public void addRiddle(Riddle riddle) {
-        riddles.add(riddle);
-    }
+        public void setQuestion(String question) {
+            this.question = question;
+            System.out.println("It worked.");
+        }
 
-    public void rmRiddle(Riddle riddle) {
-        riddles.remove(riddle);
-    }
+        public String getQuestion() {
+            return this.question;
+        }
 
-    public ArrayList<Riddle> showRiddles() {
-        return riddles;
-    }
+        public String getAnswer() {
+            return this.possibleAnswers.get(this.answerID) + " : " + this.answerID;
 
-    public void stringification() {
-        for (int i = 0; i < riddles.size(); i++) {
-            System.out.println("Question : " + this.riddles.get(i).getQuestion() +
-                    "\nAnswers : " + this.riddles.get(i).possibleAnswers +
-                    "\nCorrect Answer Index : " + this.riddles.get(i).answerID + "\n");
+        }
+
+        public void setAnswer(int inputID) {
+            answerID = inputID;
+        }
+
+        public void addAnswer(String newAnswer) {
+            this.possibleAnswers.add(newAnswer);
+        }
+
+        public void rmAnswer(int answerID) {
+            this.possibleAnswers.remove(answerID);
+        }
+
+        @Deprecated
+        public void answerQuestion(int answer) {
+            if (this.answerID == answer) {
+                System.out.println("You are correct!");
+            } else {
+                System.out.println("You are incorrect!");
+            }
+        }
+
+        public Boolean isValid() {
+            if (this.possibleAnswers.size() > 0) {
+                return Boolean.TRUE;
+            } else {
+                return Boolean.FALSE;
+            }
+        }
+
+        public String stringification() {
+            return "Question : " + this.question +
+                    "\nAnswers : " + this.possibleAnswers +
+                    "\nCorrect Answer + Index: " + getAnswer();
         }
     }
-}
+
+    class Riddles {
+        public ArrayList<Riddle> riddles = new ArrayList<Riddle>();
+
+        public void addRiddle(Riddle riddle) {
+            riddles.add(riddle);
+        }
+
+        public void rmRiddle(Riddle riddle) {
+            riddles.remove(riddle);
+        }
+
+        public ArrayList<Riddle> showRiddles() {
+            return riddles;
+        }
+
+        public void stringification() {
+            for (int i = 0; i < riddles.size(); i++) {
+                System.out.println("Question : " + this.riddles.get(i).getQuestion() +
+                        "\nAnswers : " + this.riddles.get(i).possibleAnswers +
+                        "\nCorrect Answer Index : " + this.riddles.get(i).answerID + "\n");
+            }
+        }
+    }
+
 
 
