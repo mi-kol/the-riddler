@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_the-riddler" default="compile.module.the-riddler">
+  <dirname property="module.the-riddler.basedir" file="${ant.file.module_the-riddler}"/>
+  
+  <property name="module.jdk.home.the-riddler" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.the-riddler" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.the-riddler" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.the-riddler" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="the-riddler.output.dir" value="${module.the-riddler.basedir}/out/production/the-riddler"/>
+  <property name="the-riddler.testoutput.dir" value="${module.the-riddler.basedir}/out/test/the-riddler"/>
+  
+  <path id="the-riddler.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="the-riddler.module.production.classpath">
+    <path refid="${module.jdk.classpath.the-riddler}"/>
+    <pathelement location="${basedir}/lib/cliche-shell-0.9.3.jar"/>
+    <fileset dir="${basedir}/lib/xstream">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <fileset dir="${basedir}/lib/xstream-hibernate">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <pathelement location="${basedir}/lib/xstream-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-benchmark-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-hibernate-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-jmh-1.4.9.jar"/>
+  </path>
+  
+  <path id="the-riddler.runtime.production.module.classpath">
+    <pathelement location="${the-riddler.output.dir}"/>
+    <pathelement location="${basedir}/lib/cliche-shell-0.9.3.jar"/>
+    <fileset dir="${basedir}/lib/xstream">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <fileset dir="${basedir}/lib/xstream-hibernate">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <pathelement location="${basedir}/lib/xstream-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-benchmark-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-hibernate-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-jmh-1.4.9.jar"/>
+  </path>
+  
+  <path id="the-riddler.module.classpath">
+    <path refid="${module.jdk.classpath.the-riddler}"/>
+    <pathelement location="${the-riddler.output.dir}"/>
+    <pathelement location="${basedir}/lib/cliche-shell-0.9.3.jar"/>
+    <fileset dir="${basedir}/lib/xstream">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <fileset dir="${basedir}/lib/xstream-hibernate">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <pathelement location="${basedir}/lib/xstream-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-benchmark-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-hibernate-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-jmh-1.4.9.jar"/>
+  </path>
+  
+  <path id="the-riddler.runtime.module.classpath">
+    <pathelement location="${the-riddler.testoutput.dir}"/>
+    <pathelement location="${the-riddler.output.dir}"/>
+    <pathelement location="${basedir}/lib/cliche-shell-0.9.3.jar"/>
+    <fileset dir="${basedir}/lib/xstream">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <fileset dir="${basedir}/lib/xstream-hibernate">
+      <patternset refid="library.patterns"/>
+    </fileset>
+    <pathelement location="${basedir}/lib/xstream-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-benchmark-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-hibernate-1.4.9.jar"/>
+    <pathelement location="${basedir}/lib/xstream-jmh-1.4.9.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.the-riddler">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.the-riddler">
+    <patternset refid="excluded.from.module.the-riddler"/>
+  </patternset>
+  
+  <path id="the-riddler.module.sourcepath">
+    <dirset dir="${module.the-riddler.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.the-riddler" depends="compile.module.the-riddler.production,compile.module.the-riddler.tests" description="Compile module the-riddler"/>
+  
+  <target name="compile.module.the-riddler.production" depends="register.custom.compilers" description="Compile module the-riddler; production classes">
+    <mkdir dir="${the-riddler.output.dir}"/>
+    <javac2 destdir="${the-riddler.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.the-riddler}/javac">
+      <compilerarg line="${compiler.args.the-riddler}"/>
+      <bootclasspath refid="the-riddler.module.bootclasspath"/>
+      <classpath refid="the-riddler.module.production.classpath"/>
+      <src refid="the-riddler.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.the-riddler"/>
+    </javac2>
+    
+    <copy todir="${the-riddler.output.dir}">
+      <fileset dir="${module.the-riddler.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.the-riddler.tests" depends="register.custom.compilers,compile.module.the-riddler.production" description="compile module the-riddler; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.the-riddler" description="cleanup module">
+    <delete dir="${the-riddler.output.dir}"/>
+    <delete dir="${the-riddler.testoutput.dir}"/>
+  </target>
+</project>

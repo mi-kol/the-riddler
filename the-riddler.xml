@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="the-riddler" default="all">
+  
+  
+  <property file="the-riddler.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*.yarb/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.war"/>
+    <include name="*.swc"/>
+    <include name="*.apk"/>
+    <include name="*.zip"/>
+    <include name="*.ear"/>
+    <include name="*.egg"/>
+    <include name="*.ane"/>
+    <include name="*.jar"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.1.8" value="${jdk.home.1.8}/bin"/>
+  <path id="jdk.classpath.1.8">
+    <fileset dir="${jdk.home.1.8}">
+      <include name="jre/lib/charsets.jar"/>
+      <include name="jre/lib/deploy.jar"/>
+      <include name="jre/lib/ext/access-bridge-64.jar"/>
+      <include name="jre/lib/ext/cldrdata.jar"/>
+      <include name="jre/lib/ext/dnsns.jar"/>
+      <include name="jre/lib/ext/jaccess.jar"/>
+      <include name="jre/lib/ext/jfxrt.jar"/>
+      <include name="jre/lib/ext/localedata.jar"/>
+      <include name="jre/lib/ext/nashorn.jar"/>
+      <include name="jre/lib/ext/sunec.jar"/>
+      <include name="jre/lib/ext/sunjce_provider.jar"/>
+      <include name="jre/lib/ext/sunmscapi.jar"/>
+      <include name="jre/lib/ext/sunpkcs11.jar"/>
+      <include name="jre/lib/ext/zipfs.jar"/>
+      <include name="jre/lib/javaws.jar"/>
+      <include name="jre/lib/jce.jar"/>
+      <include name="jre/lib/jfr.jar"/>
+      <include name="jre/lib/jfxswt.jar"/>
+      <include name="jre/lib/jsse.jar"/>
+      <include name="jre/lib/management-agent.jar"/>
+      <include name="jre/lib/plugin.jar"/>
+      <include name="jre/lib/resources.jar"/>
+      <include name="jre/lib/rt.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.1.8}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.1.8}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.1.8"/>
+  <!-- Register Custom Compiler Taskdefs -->
+  <property name="javac2.home" value="${idea.home}/lib"/>
+  <path id="javac2.classpath">
+    <pathelement location="${javac2.home}/javac2.jar"/>
+    <pathelement location="${javac2.home}/jdom.jar"/>
+    <pathelement location="${javac2.home}/asm-all.jar"/>
+    <pathelement location="${javac2.home}/jgoodies-forms.jar"/>
+  </path>
+  <target name="register.custom.compilers">
+    <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="javac2.classpath"/>
+    <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="javac2.classpath"/>
+  </target>
+  
+  <!-- Modules -->
+  
+  <import file="${basedir}/module_the-riddler.xml"/>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.the-riddler" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.the-riddler" description="build all modules"/>
+  
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.the-riddler:jar" value="${basedir}/out/artifacts/the_riddler_jar"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.the-riddler.jar" value="${artifacts.temp.dir}/the-riddler.jar"/>
+  </target>
+  
+  <target name="artifact.the-riddler:jar" depends="init.artifacts, compile.module.the-riddler" description="Build &#39;the-riddler:jar&#39; artifact">
+    <property name="artifact.temp.output.the-riddler:jar" value="${artifacts.temp.dir}/the_riddler_jar"/>
+    <mkdir dir="${artifact.temp.output.the-riddler:jar}"/>
+    <jar destfile="${temp.jar.path.the-riddler.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset dir="${the-riddler.output.dir}"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate-1.4.9.jar"/>
+      <zipfileset src="${basedir}/lib/cliche-shell-0.9.3.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/xom-1.1.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/jdom-1.1.3.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/stax-1.2.0.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/dom4j-1.6.1.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/jdom2-2.0.5.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/kxml2-2.3.0.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/jettison-1.2.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/joda-time-1.6.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/stax-api-1.0.1.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/wstx-asl-3.2.7.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/cglib-nodep-2.2.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/kxml2-min-2.3.0.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/xmlpull-1.1.3.1.jar"/>
+      <zipfileset src="${basedir}/lib/xstream/xpp3_min-1.1.4c.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/antlr-2.7.7.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/dom4j-1.6.1.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/slf4j-api-1.6.1.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/javassist-3.15.0-GA.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/jboss-logging-3.1.0.GA.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/hibernate-core-4.2.5.Final.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/hibernate-envers-4.2.5.Final.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/hibernate-jpa-2.0-api-1.0.1.Final.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/hibernate-entitymanager-4.2.5.Final.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/hibernate-commons-annotations-4.0.2.Final.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-hibernate/jboss-transaction-api_1.1_spec-1.0.1.Final.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-benchmark-1.4.9.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-1.4.9.jar"/>
+      <zipfileset src="${basedir}/lib/xstream-jmh-1.4.9.jar"/>
+    </jar>
+    <copy file="${temp.jar.path.the-riddler.jar}" tofile="${artifact.temp.output.the-riddler:jar}/the-riddler.jar"/>
+  </target>
+  
+  <target name="build.all.artifacts" depends="artifact.the-riddler:jar" description="Build all artifacts">
+    <mkdir dir="${artifact.output.the-riddler:jar}"/>
+    <copy todir="${artifact.output.the-riddler:jar}">
+      <fileset dir="${artifact.temp.output.the-riddler:jar}"/>
+    </copy>
+    
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+  
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
+</project>

@@ -12,14 +12,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Scanner;
 
-import com.sun.org.apache.xerces.internal.parsers.DOMParser;
 import com.thoughtworks.xstream.*;
 import com.thoughtworks.xstream.io.xml.DomDriver;
-import com.thoughtworks.xstream.io.xml.StaxDriver;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -70,16 +66,17 @@ public class inputParser {
                 .commandLoop();
     }
 
-    @Command // Help - Not finished
+    @Command // Help
     public String help() {
         return "Uses: help -- get help\n" +
                 "      create  -- create a riddle and followp prompts\n" +
                 "      select -- lists all riddles pulled from file. lets you select which one to interact with\n" +
                 "      retrieve -- see all riddles\n" +
-                "      question -- lists question for selected\n " +
-                "     answer -- lists answer for selected\n" +
+                "      question -- lists question for selected\n" +
+                "      answer -- lists answer for selected\n" +
                 "      wipe -- wipes XML file, probably don't do this\n" +
-                "      solve -- attempt to solve the riddle. either use argument \"easy\" or \"hard\"\n";
+                "      solve -- attempt to solve the riddle. either use argument \"easy\" or \"hard\". If you can't figure it out and want to stop, type \"give up\"\n" +
+                "      edit -- edit answers. use \"add\" to add answers, and \"remove\" or \"rm\" to delete them";
 
     }
 
@@ -92,7 +89,11 @@ public class inputParser {
         Scanner in = new Scanner(System.in);
         System.out.println("Which riddle would you like to select?");
         String userInput = in.nextLine();
-        relevantRiddle = Integer.parseInt(userInput);
+        if (Integer.parseInt(userInput) <= riddles.riddles.size() || Integer.parseInt(userInput) > -1) {
+            relevantRiddle = Integer.parseInt(userInput);
+        } else {
+            System.out.println("That doesn't seem right. Try selecting a riddle shown on the screen.");
+        }
         System.out.println("Alright.");
     }
 
@@ -138,64 +139,71 @@ public class inputParser {
         in = new Scanner(System.in);
         System.out.println("How many possible answers should there be?");
         userInput = in.nextLine();
-        int answersInt = Integer.parseInt(userInput);
-        for (int i = 0; i < answersInt; i++) {
-            in = new Scanner(System.in);
-            System.out.println("[" + i + "] Possible answer:");
-            riddle.possibleAnswers.add(in.nextLine());
-        }
-        in = new Scanner(System.in);
-        System.out.println("Which is the correct answer? Type the number, starting from 1.");
-        for (int i = 0; i < riddle.possibleAnswers.size(); i++) {
-            System.out.println("[" + i + "]" + " " + riddle.possibleAnswers.get(i));
-        }
-        userInput = in.nextLine();
-        riddle.setAnswer(Integer.parseInt(userInput));
-        riddles.addRiddle(riddle);
-        if (file.length() == 0) {
-            String toXML = xstream.toXML(riddles);
-            PrintWriter pw = new PrintWriter("riddles.xml");
-            pw.println(toXML);
-            pw.flush();
-            pw.close();
-        } else {
-            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            Document document = documentBuilder.parse("riddles.xml");
-            Element root = document.getDocumentElement();
-            Collection<Riddle> riddles = new ArrayList<Riddle>();
-            riddles.add(riddle);
-            for (int i = 0; i < riddles.size(); i++) {
-                Element newRiddles = document.createElement("riddles");
-
-                Element newRiddle = document.createElement("riddle");
-                newRiddles.appendChild(newRiddle);
-
-                Element question = document.createElement("question");
-                question.appendChild(document.createTextNode(riddle.getQuestion()));
-                newRiddle.appendChild(question);
-
-                Element possibleAnswers = document.createElement("possibleAnswers");
-                possibleAnswers.appendChild(document.createTextNode(Arrays.toString(riddle.possibleAnswers.toArray())));
-                newRiddle.appendChild(possibleAnswers);
-
-                Element answerID = document.createElement("answerID");
-                answerID.appendChild(document.createTextNode(Integer.toString(riddle.answerID)));
-                newRiddle.appendChild(answerID);
-
-                root.appendChild(newRiddle);
-
+        if (Integer.parseInt(userInput) == (int) Integer.parseInt(userInput)) {
+            int answersInt = Integer.parseInt(userInput);
+            for (int i = 0; i < answersInt; i++) {
+                in = new Scanner(System.in);
+                System.out.println("[" + i + "] Possible answer:");
+                riddle.possibleAnswers.add(in.nextLine());
             }
+            in = new Scanner(System.in);
+            System.out.println("Which is the correct answer? Type the number, starting from 1.");
+            for (int i = 0; i < riddle.possibleAnswers.size(); i++) {
+                System.out.println("[" + i + "]" + " " + riddle.possibleAnswers.get(i));
+            }
+            userInput = in.nextLine();
+            if (Integer.parseInt(userInput) == (int) Integer.parseInt(userInput) && Integer.parseInt(userInput) <= riddle.possibleAnswers.size() && Integer.parseInt(userInput) > -1) {
+                riddle.setAnswer(Integer.parseInt(userInput));
+                riddles.addRiddle(riddle);
+                if (file.length() == 0) {
+                    String toXML = xstream.toXML(riddles);
+                    PrintWriter pw = new PrintWriter("riddles.xml");
+                    pw.println(toXML);
+                    pw.flush();
+                    pw.close();
+                } else {
+                    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+                    Document document = documentBuilder.parse("riddles.xml");
+                    Element root = document.getDocumentElement();
+                    Collection<Riddle> riddles = new ArrayList<Riddle>();
+                    riddles.add(riddle);
+                    for (int i = 0; i < riddles.size(); i++) {
+                        Element newRiddles = document.createElement("riddles");
 
-            DOMSource source = new DOMSource(document);
+                        Element newRiddle = document.createElement("riddle");
+                        newRiddles.appendChild(newRiddle);
 
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            StreamResult result = new StreamResult("riddles.xml");
-            transformer.transform(source, result);
+                        Element question = document.createElement("question");
+                        question.appendChild(document.createTextNode(riddle.getQuestion()));
+                        newRiddle.appendChild(question);
+
+                        Element possibleAnswers = document.createElement("possibleAnswers");
+                        possibleAnswers.appendChild(document.createTextNode(Arrays.toString(riddle.possibleAnswers.toArray())));
+                        newRiddle.appendChild(possibleAnswers);
+
+                        Element answerID = document.createElement("answerID");
+                        answerID.appendChild(document.createTextNode(Integer.toString(riddle.answerID)));
+                        newRiddle.appendChild(answerID);
+
+                        root.appendChild(newRiddle);
+
+                    }
+
+                    DOMSource source = new DOMSource(document);
+
+                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                    Transformer transformer = transformerFactory.newTransformer();
+                    StreamResult result = new StreamResult("riddles.xml");
+                    transformer.transform(source, result);
+                }
+                xstream.toXML(riddles, new FileWriter(newFilePath));
+            } else {
+                System.out.println("Try using an integer that is valid and matches a correct number.");
+            }
+        } else {
+            System.out.println("Try entering an integer.");
         }
-        xstream.toXML(riddles, new FileWriter(newFilePath));
-        // addXMLNode();
     }
 
     @Command // Retrieves XML file.
@@ -247,6 +255,8 @@ public class inputParser {
                     System.out.println("False! Try again!");
                     solve(mode);
                 }
+            } else if (mode.toLowerCase().equals("give up")) {
+                System.out.println("Fair enough.");
             } else {
                 System.out.println("This didn't work. Try typing 'easy' or 'hard' as your argument.");
             }
@@ -263,16 +273,21 @@ public class inputParser {
                 System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
             }
             Scanner in = new Scanner(System.in);
-            int userAnswer = Integer.parseInt(in.nextLine());
-            riddles.riddles.get(relevantRiddle).rmAnswer(userAnswer);
-            System.out.println("Removed. Here are the remaining answers.");
-            for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
-                System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
-            }
-            try {
-                refresh();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            if (Integer.parseInt(in.nextLine()) == (int) Integer.parseInt(in.nextLine()) && Integer.parseInt(in.nextLine()) <= riddles.riddles.get(relevantRiddle).possibleAnswers.size() && Integer.parseInt(in.nextLine()) > -1) {
+                int userAnswer = Integer.parseInt(in.nextLine());
+                riddles.riddles.get(relevantRiddle).rmAnswer(userAnswer);
+                System.out.println("Removed. Here are the remaining answers.");
+                for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
+                    System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
+                }
+                try {
+                    refresh();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Try selecting an available answer index.");
+                edit(mode);
             }
         } else if (mode.toLowerCase().equals("add")) {
             System.out.println("What would you like to add to the answers?");
