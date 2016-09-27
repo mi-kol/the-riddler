@@ -34,6 +34,7 @@ public class inputParser {
 
 
     public static void fileCreator() {
+        // Creates the XML file that the rest of the program builds off of.
         xstream.alias("riddle", Riddle.class);
         Path currentRelativePath = Paths.get("");
         newFilePath = currentRelativePath.toAbsolutePath().toString() + "\\riddles.xml";
@@ -50,6 +51,7 @@ public class inputParser {
     }
 
     public static void main(String[] args) throws IOException {
+        // Controls command loop. Aliases riddles to riddles.class for easier use through xstream.
         fileCreator();
         xstream.alias("riddles", Riddles.class);
         xstream.alias("riddle", Riddle.class);
@@ -68,6 +70,7 @@ public class inputParser {
 
     @Command // Help
     public String help() {
+        // Gives help
         return "Uses: help -- get help\n" +
                 "      create  -- create a riddle and followp prompts\n" +
                 "      select -- lists all riddles pulled from file. lets you select which one to interact with\n" +
@@ -82,6 +85,7 @@ public class inputParser {
 
     @Command // Select riddle
     public void select() {
+        // Select the riddle that the user wants to work with.
         for (int i = 0; i < riddles.riddles.size(); i++) {
             String newString = "[" + i + "]\n" + riddles.riddles.get(i).stringification();
             System.out.println(newString);
@@ -99,16 +103,19 @@ public class inputParser {
 
     @Command // Get Question
     public void question() {
+        // Prints the question.
         System.out.println(riddles.riddles.get(relevantRiddle).getQuestion());
     }
 
     @Command // Get Answer
     public void answer() {
+        // Prints the answer.
         System.out.println(riddles.riddles.get(relevantRiddle).getAnswer());
     }
 
     @Command // Change Answer
     public void change() {
+        // Change the answer index.
         for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
             System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
         }
@@ -124,6 +131,7 @@ public class inputParser {
 
     @Command // Instantiate new Riddle
     public void create() throws Exception {
+        // Create a riddle
         System.out.println("Current riddles.");
         System.out.println(riddles.riddles.size());
         if (riddles.riddles.size() > 0) {
@@ -134,10 +142,12 @@ public class inputParser {
         Riddle riddle = new Riddle();
         Scanner in = new Scanner(System.in);
         System.out.println("Enter your riddle.");
+        // First attribtue - riddle question
         String userInput = in.nextLine();
         riddle.setQuestion(userInput);
         in = new Scanner(System.in);
         System.out.println("How many possible answers should there be?");
+        // Starts to generate the attribute - possible answers
         userInput = in.nextLine();
         if (Integer.parseInt(userInput) == (int) Integer.parseInt(userInput)) {
             int answersInt = Integer.parseInt(userInput);
@@ -146,11 +156,13 @@ public class inputParser {
                 System.out.println("[" + i + "] Possible answer:");
                 riddle.possibleAnswers.add(in.nextLine());
             }
+            // establishes possibleAnswers
             in = new Scanner(System.in);
             System.out.println("Which is the correct answer? Type the number, starting from 1.");
             for (int i = 0; i < riddle.possibleAnswers.size(); i++) {
                 System.out.println("[" + i + "]" + " " + riddle.possibleAnswers.get(i));
             }
+            // establishes answerID
             userInput = in.nextLine();
             if (Integer.parseInt(userInput) == (int) Integer.parseInt(userInput) && Integer.parseInt(userInput) <= riddle.possibleAnswers.size() && Integer.parseInt(userInput) > -1) {
                 riddle.setAnswer(Integer.parseInt(userInput));
@@ -161,6 +173,7 @@ public class inputParser {
                     pw.println(toXML);
                     pw.flush();
                     pw.close();
+                    // creates XML format
                 } else {
                     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
                     DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -196,6 +209,7 @@ public class inputParser {
                     Transformer transformer = transformerFactory.newTransformer();
                     StreamResult result = new StreamResult("riddles.xml");
                     transformer.transform(source, result);
+                    // appends riddle nodes to xml
                 }
                 xstream.toXML(riddles, new FileWriter(newFilePath));
             } else {
@@ -208,6 +222,7 @@ public class inputParser {
 
     @Command // Retrieves XML file.
     public static void retrieve() {
+        // Retrieves XML file. Prints it out through the "stringification" method.
         try {
             FileInputStream fis = new FileInputStream("riddles.xml");
             xstream.fromXML(fis, riddles);
@@ -219,6 +234,7 @@ public class inputParser {
 
     @Command // Wipes XML file.
     public void wipe() throws FileNotFoundException {
+        // Wipes the XML file clean
         System.out.println("Current riddles.");
         retrieve();
         PrintWriter writer = new PrintWriter("riddles.xml");
@@ -229,19 +245,23 @@ public class inputParser {
 
     @Command // Solve
     public void solve(String mode) {
+        // Attempts to solve the riddle, using the input that the user will later give and what difficulty the user wants (easy is multiple choice, hard is short answer)
         if (riddles.riddles.get(relevantRiddle).isValid()) {
+            // checks if riddle is valid to be solved
             if (mode.toLowerCase().equals("hard")) {
                 System.out.println(riddles.riddles.get(relevantRiddle).getQuestion());
                 System.out.println("Answer here! Caps are irrelevant. Be sure to spell correctly!");
                 Scanner in = new Scanner(System.in);
                 String userAnswer = in.nextLine();
                 if (userAnswer.toLowerCase().equals(riddles.riddles.get(relevantRiddle).possibleAnswers.get(riddles.riddles.get(relevantRiddle).answerID).toLowerCase())) {
+                    // checks if riddle answer is what was answered
                     System.out.println("True!");
                 } else {
                     System.out.println("False! Try again!");
                     solve(mode);
                 }
             } else if (mode.toLowerCase().equals("easy")) {
+                // multiple choice riddle solving
                 System.out.println(riddles.riddles.get(relevantRiddle).getQuestion());
                 System.out.println("Answer here! Enter the correct index!");
                 for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
@@ -267,13 +287,16 @@ public class inputParser {
 
     @Command // Edit answers
     public void edit(String mode) {
+        // If the arg is remove or rm, tries to delete one of the possible answers. if the arg is add, it adds to the possible answers
         if (mode.toLowerCase().equals("remove") || mode.toLowerCase().equals("rm")) {
             System.out.println("Which answer would you like to remove?");
             for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
                 System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
             }
+            // just prints the riddles with the index.
             Scanner in = new Scanner(System.in);
             if (Integer.parseInt(in.nextLine()) == (int) Integer.parseInt(in.nextLine()) && Integer.parseInt(in.nextLine()) <= riddles.riddles.get(relevantRiddle).possibleAnswers.size() && Integer.parseInt(in.nextLine()) > -1) {
+                // checks to see that the integer is valid, and is an active possible answer.
                 int userAnswer = Integer.parseInt(in.nextLine());
                 riddles.riddles.get(relevantRiddle).rmAnswer(userAnswer);
                 System.out.println("Removed. Here are the remaining answers.");
@@ -297,6 +320,7 @@ public class inputParser {
             Scanner in = new Scanner(System.in);
             String userAnswer = in.nextLine();
             riddles.riddles.get(relevantRiddle).addAnswer(userAnswer);
+            // just appends an answer to the array list
             for (int i = 0; i < riddles.riddles.get(relevantRiddle).possibleAnswers.size(); i++) {
                 System.out.println("[" + i + "]" + " " + riddles.riddles.get(relevantRiddle).possibleAnswers.get(i));
             }
@@ -310,6 +334,7 @@ public class inputParser {
 
 
     public void refresh() throws FileNotFoundException {
+        // refreshes xml file with current riddles data.
         PrintWriter pw = new PrintWriter("riddles.xml");
         pw.println();
         String toXML = xstream.toXML(riddles);
@@ -320,37 +345,46 @@ public class inputParser {
 }
 
     class Riddle {
+        // Riddle class
         public String question;
+        // question attribute
         ArrayList<String> possibleAnswers = new ArrayList<>();
+        // possible answers attribute
         public int answerID;
-
+        // answer id attribute
         public void setQuestion(String question) {
+            // sets question attribute
             this.question = question;
             System.out.println("It worked.");
         }
 
         public String getQuestion() {
+            // prints question
             return this.question;
         }
 
         public String getAnswer() {
+            // prints answer string as well as index
             return this.possibleAnswers.get(this.answerID) + " : " + this.answerID;
 
         }
 
         public void setAnswer(int inputID) {
+            // sets answer id
             answerID = inputID;
         }
 
         public void addAnswer(String newAnswer) {
+            // adds answer to possible answers
             this.possibleAnswers.add(newAnswer);
         }
 
         public void rmAnswer(int answerID) {
+            // removes answer from possible answers
             this.possibleAnswers.remove(answerID);
         }
 
-        @Deprecated
+        // this is just here to satisfy the needs of the assignment. i found that running through the solve function in inputParser class was faster to write (and looked cooler)
         public void answerQuestion(int answer) {
             if (this.answerID == answer) {
                 System.out.println("You are correct!");
@@ -360,6 +394,7 @@ public class inputParser {
         }
 
         public Boolean isValid() {
+            // checks if answer can be asked by making sure that there is enough possible answers
             if (this.possibleAnswers.size() > 0) {
                 return Boolean.TRUE;
             } else {
@@ -368,6 +403,7 @@ public class inputParser {
         }
 
         public String stringification() {
+            // prints out riddle in a human readable format
             return "Question : " + this.question +
                     "\nAnswers : " + this.possibleAnswers +
                     "\nCorrect Answer + Index: " + getAnswer();
@@ -375,21 +411,21 @@ public class inputParser {
     }
 
     class Riddles {
+        // manages all riddles. this is mainly for XML purposes
         public ArrayList<Riddle> riddles = new ArrayList<Riddle>();
+        // array list of the riddle objects
 
         public void addRiddle(Riddle riddle) {
+            // adds riddle to riddles
             riddles.add(riddle);
         }
 
         public void rmRiddle(Riddle riddle) {
+            // removes riddle from riddles
             riddles.remove(riddle);
         }
-
-        public ArrayList<Riddle> showRiddles() {
-            return riddles;
-        }
-
         public void stringification() {
+            // recursively prints human readable representations of the riddles
             for (int i = 0; i < riddles.size(); i++) {
                 System.out.println("Question : " + this.riddles.get(i).getQuestion() +
                         "\nAnswers : " + this.riddles.get(i).possibleAnswers +
