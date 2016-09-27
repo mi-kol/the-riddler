@@ -433,6 +433,3 @@ public class inputParser {
             }
         }
     }
-
-
-
